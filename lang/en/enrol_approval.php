@@ -22,6 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['approval:config'] = 'Configure instances of enrolment by approval';
+$string['approval:manage'] = 'Manage enrolled users';
+$string['approval:unenrol'] = 'Unenrol users from course';
+$string['approval:unenrolself'] = 'Unenrol self from the course';
 $string['canntenrol'] = 'Enrolment is disabled or inactive';
 $string['cohortnonmemberinfo'] = 'Only members of cohort \'{$a}\' can self-enrol.';
 $string['cohortonly'] = 'Only cohort members';
@@ -87,10 +91,6 @@ $string['pluginname_desc'] = 'The self enrolment plugin allows users to choose w
 $string['requirepassword'] = 'Require enrolment key';
 $string['requirepassword_desc'] = 'Require enrolment key in new courses and prevent removing of enrolment key from existing courses.';
 $string['role'] = 'Default assigned role';
-$string['approval:config'] = 'Configure instances of enrolment by approval';
-$string['approval:manage'] = 'Manage enrolled users';
-$string['approval:unenrol'] = 'Unenrol users from course';
-$string['approval:unenrolself'] = 'Unenrol self from the course';
 $string['sendcoursewelcomemessage'] = 'Send course welcome message';
 $string['sendcoursewelcomemessage_help'] = 'If enabled, users receive a welcome message via email when they self-enrol in a course.';
 $string['showhint'] = 'Show hint';
