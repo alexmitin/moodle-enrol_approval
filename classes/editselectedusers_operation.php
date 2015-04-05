@@ -60,7 +60,7 @@ class enrol_approval_editselectedusers_operation extends enrol_bulk_enrolment_op
     public function process(course_enrolment_manager $manager, array $users, stdClass $properties) {
         global $DB, $USER;
 
-        if (!has_capability("enrol/approval:manage", $manager->get_context())) {
+        if (!has_capability('enrol/approval:manage', $manager->get_context())) {
             return false;
         }
 
@@ -84,7 +84,7 @@ class enrol_approval_editselectedusers_operation extends enrol_bulk_enrolment_op
         list($ueidsql, $params) = $DB->get_in_or_equal($ueids, SQL_PARAMS_NAMED);
 
         $updatesql = array();
-        if ($status == ENROL_USER_ACTIVE) {
+        if ($status == ENROL_USER_ACTIVE && has_capability('enrol/approval:approve', $manager->get_context())) {
             $updatesql[] = 'status = :status';
             $params['status'] = (int)$status;
         }

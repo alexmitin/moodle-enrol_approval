@@ -22,8 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['approval:approve'] = 'Approve and decline enrolment requests';
 $string['approval:config'] = 'Configure instances of enrolment by approval';
 $string['approval:manage'] = 'Manage enrolled users';
+$string['approval:notify'] = 'Be notified about new enrolment requests';
 $string['approval:unenrol'] = 'Unenrol users from course';
 $string['approval:unenrolself'] = 'Unenrol self from the course';
 $string['approve'] = 'Approve enrolment';

@@ -78,7 +78,7 @@ class enrol_approval_approveselectedusers_operation extends enrol_bulk_enrolment
      * @param stdClass $properties The data returned by the form.
      */
     public function process(course_enrolment_manager $manager, array $users, stdClass $properties) {
-        if (!has_capability('enrol/approval:manage', $manager->get_context())) {
+        if (!has_capability('enrol/approval:approve', $manager->get_context())) {
             return false;
         }
         foreach ($users as $user) {

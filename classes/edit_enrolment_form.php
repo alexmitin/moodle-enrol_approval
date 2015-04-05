@@ -38,13 +38,14 @@ class enrol_approval_edit_enrolment_form extends enrol_user_enrolment_form {
      * Executed after set_data
      */
     public function definition_after_data() {
+        global $PAGE;
         parent::definition_after_data();
         $mform = $this->_form;
         if ($el = $mform->getElement('status')) {
             $el->_options[ENROL_USER_SUSPENDED]['text'] = get_string('participationsuspended', 'enrol_approval');
             $el->_options[ENROL_USER_ACTIVE]['text'] = get_string('participationactive', 'enrol_approval');
             $ue = $this->_customdata['ue'];
-            if ($ue->status == ENROL_USER_ACTIVE) {
+            if ($ue->status == ENROL_USER_ACTIVE || !has_capability('enrol/approval:approve', $PAGE->context)) {
                 // It is not allowed to suspend the enrolment in this method.
                 $mform->freeze('status');
             }

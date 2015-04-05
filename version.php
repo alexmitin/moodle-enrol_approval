@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2014111000;
+$plugin->version   = 2015040500;
 $plugin->requires  = 2014051200;
 $plugin->component = 'enrol_approval';
 $plugin->cron      = 600;

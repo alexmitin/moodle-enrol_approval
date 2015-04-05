@@ -46,9 +46,6 @@ if (($instance->enrol !== 'approval') ||
 
 require_login($course);
 
-// The user must be able to manage enrolments within the course.
-require_capability('enrol/approval:manage', $PAGE->context);
-
 $PAGE->set_url(new moodle_url('/enrol/approval/process.php',
         array('ue' => $ueid, 'redirecturl' => $redirecturl, 'action' => $action)));
 
@@ -57,6 +54,7 @@ if (!$redirecturl) {
 }
 
 if ($action === 'approve') {
+    require_capability('enrol/approval:approve', $PAGE->context);
     require_sesskey();
     if ($ue->status == ENROL_USER_SUSPENDED) {
         $plugin->update_user_enrol($instance, $user->id, ENROL_USER_ACTIVE);
@@ -65,6 +63,7 @@ if ($action === 'approve') {
 }
 
 if ($action === 'decline') {
+    require_capability('enrol/approval:approve', $PAGE->context);
     require_sesskey();
     if ($ue->status == ENROL_USER_SUSPENDED) {
         $plugin->unenrol_user($instance, $user->id);
@@ -73,6 +72,7 @@ if ($action === 'decline') {
 }
 
 if ($action === 'edit') {
+    require_capability('enrol/approval:manage', $PAGE->context);
     $form = new enrol_approval_edit_enrolment_form($PAGE->url,
             array('user' => $user, 'course' => $course, 'ue' => $ue));
     if ($form->is_cancelled()) {

@@ -585,24 +585,24 @@ class enrol_approval_plugin extends enrol_plugin {
             $actions[] = new user_enrolment_action(new pix_icon('t/delete', ''),
                     get_string('unenrol', 'enrol'), $url, array('class' => 'unenrollink', 'rel' => $ue->id));
         }
+        $url = new moodle_url('/enrol/approval/process.php',
+                array('ue' => $ue->id,
+                    'redirecturl' => $manager->get_moodlepage()->url));
         if (has_capability('enrol/approval:manage', $context)) {
-            $url = new moodle_url('/enrol/approval/process.php',
-                    array('ue' => $ue->id,
-                        'redirecturl' => $manager->get_moodlepage()->url));
             $actions[] = new user_enrolment_action(new pix_icon('t/edit', ''), get_string('edit'),
                     new moodle_url($url, array('action' => 'edit')),
                     array('class' => 'editenrollink', 'rel' => $ue->id));
-            if ($ue->status == ENROL_USER_SUSPENDED) {
-                $url->param('sesskey', sesskey());
-                $actions[] = new user_enrolment_action(new pix_icon('i/invalid', ''),
-                        get_string('decline', 'enrol_approval'),
-                        new moodle_url($url, array('action' => 'decline')),
-                        array('class' => 'declineenrollink', 'rel' => $ue->id));
-                $actions[] = new user_enrolment_action(new pix_icon('i/valid', ''),
-                        get_string('approve', 'enrol_approval'),
-                        new moodle_url($url, array('action' => 'approve')),
-                        array('class' => 'approveenrollink', 'rel' => $ue->id));
-            }
+        }
+        if (has_capability('enrol/approval:approve', $context) && $ue->status == ENROL_USER_SUSPENDED) {
+            $url->param('sesskey', sesskey());
+            $actions[] = new user_enrolment_action(new pix_icon('i/invalid', ''),
+                    get_string('decline', 'enrol_approval'),
+                    new moodle_url($url, array('action' => 'decline')),
+                    array('class' => 'declineenrollink', 'rel' => $ue->id));
+            $actions[] = new user_enrolment_action(new pix_icon('i/valid', ''),
+                    get_string('approve', 'enrol_approval'),
+                    new moodle_url($url, array('action' => 'approve')),
+                    array('class' => 'approveenrollink', 'rel' => $ue->id));
         }
         return $actions;
     }
@@ -617,10 +617,10 @@ class enrol_approval_plugin extends enrol_plugin {
         global $CFG;
         $context = $manager->get_context();
         $bulkoperations = array();
-        if (has_capability("enrol/approval:manage", $context)) {
+        if (has_capability("enrol/approval:approve", $context)) {
             $bulkoperations['approveselectedusers'] = new enrol_approval_approveselectedusers_operation($manager, $this);
         }
-        if (has_capability("enrol/approval:manage", $context)) {
+        if (has_capability("enrol/approval:approve", $context)) {
             $bulkoperations['declineselectedusers'] = new enrol_approval_declineselectedusers_operation($manager, $this);
         }
         if (has_capability("enrol/approval:manage", $context)) {

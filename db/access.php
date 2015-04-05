@@ -46,6 +46,26 @@ $capabilities = array(
         )
     ),
 
+    // Approve/decline user enrolments.
+    'enrol/approval:approve' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => array(
+            'editingteacher' => CAP_ALLOW,
+            'teacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        )
+    ),
+
+    // Be notified about user enrolments requests.
+    'enrol/approval:notify' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => array(
+            'editingteacher' => CAP_ALLOW,
+        )
+    ),
+
     // Voluntarily unenrol self from course.
     'enrol/approval:unenrolself' => array(
         'captype' => 'write',
