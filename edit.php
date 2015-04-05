@@ -23,7 +23,6 @@
  */
 
 require('../../config.php');
-require_once('edit_form.php');
 
 $courseid   = required_param('courseid', PARAM_INT);
 $instanceid = optional_param('id', 0, PARAM_INT);
@@ -67,7 +66,7 @@ if ($instance->notifyall and $instance->expirynotify) {
 }
 unset($instance->notifyall);
 
-$mform = new enrol_approval_edit_form(null, array($instance, $plugin, $context));
+$mform = new enrol_approval_instance_edit_form(null, array($instance, $plugin, $context));
 
 if ($mform->is_cancelled()) {
     redirect($return);

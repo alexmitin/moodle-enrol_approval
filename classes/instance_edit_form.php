@@ -34,7 +34,7 @@ require_once($CFG->dirroot.'/cohort/lib.php');
  * @copyright  2015 Alex Mitin
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class enrol_approval_edit_form extends moodleform {
+class enrol_approval_instance_edit_form extends moodleform {
 
     /**
      * Form definition
