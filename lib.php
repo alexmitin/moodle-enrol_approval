@@ -301,7 +301,7 @@ class enrol_approval_plugin extends enrol_plugin {
 
         if ($instance->customint3 > 0) {
             // Max enrol limit specified.
-            $count = $DB->count_records('user_enrolments', array('enrolid' => $instance->id));
+            $count = $DB->count_records('user_enrolments', array('enrolid' => $instance->id, 'status' => ENROL_USER_ACTIVE));
             if ($count >= $instance->customint3) {
                 // Bad luck, no more self enrolments here.
                 return get_string('maxenrolledreached', 'enrol_approval');
