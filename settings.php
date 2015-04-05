@@ -59,10 +59,6 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configselect('enrol_approval/status',
         get_string('status', 'enrol_approval'), get_string('status_desc', 'enrol_approval'), ENROL_INSTANCE_DISABLED, $options));
 
-    $options = array(1  => get_string('yes'), 0 => get_string('no'));
-    $settings->add(new admin_setting_configselect('enrol_approval/newenrols',
-        get_string('newenrols', 'enrol_approval'), get_string('newenrols_desc', 'enrol_approval'), 1, $options));
-
     if (!during_initial_install()) {
         $options = get_default_enrol_roles(context_system::instance());
         $student = get_archetype_roles('student');

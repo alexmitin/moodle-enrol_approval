@@ -80,7 +80,6 @@ $string['maxenrolled_help'] = 'Specifies the maximum number of users that can se
 $string['maxenrolledreached'] = 'Maximum number of users allowed to self-enrol was already reached.';
 $string['messageprovider:expiry_notification'] = 'Self enrolment expiry notifications';
 $string['newenrols'] = 'Allow new enrolment requests';
-$string['newenrols_desc'] = 'Allow users to self enrol into new courses by default.';
 $string['newenrols_help'] = 'This setting determines whether a user can enrol into this course.';
 $string['noapplicableusers'] = 'Neither of selected users has the status "{$a}" required for this action';
 $string['partialapplicableusers'] = 'One or more of selected users do not have the status "{$a}" required for this action';

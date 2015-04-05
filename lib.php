@@ -378,7 +378,7 @@ class enrol_approval_plugin extends enrol_plugin {
         $fields['customint3']      = $this->get_config('maxenrolled');
         $fields['customint4']      = $this->get_config('sendcoursewelcomemessage');
         $fields['customint5']      = 0;
-        $fields['customint6']      = $this->get_config('newenrols');
+        $fields['customint6']      = 1;
 
         return $fields;
     }
