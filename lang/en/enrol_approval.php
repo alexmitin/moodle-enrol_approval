@@ -26,6 +26,7 @@ $string['approval:config'] = 'Configure instances of enrolment by approval';
 $string['approval:manage'] = 'Manage enrolled users';
 $string['approval:unenrol'] = 'Unenrol users from course';
 $string['approval:unenrolself'] = 'Unenrol self from the course';
+$string['approve'] = 'Approve enrolment';
 $string['canntenrol'] = 'Enrolment is disabled or inactive';
 $string['cohortnonmemberinfo'] = 'Only members of cohort \'{$a}\' can request enrolment.';
 $string['cohortonly'] = 'Only cohort members';
@@ -37,6 +38,7 @@ The following placeholders may be included in the message:
 
 * Course name {$a->coursename}
 * Link to user\'s profile page {$a->profileurl}';
+$string['decline'] = 'Decline enrolment';
 $string['defaultrole'] = 'Default role assignment';
 $string['defaultrole_desc'] = 'Select role which should be assigned to users during the enrolment';
 $string['enrolenddate'] = 'End date';

@@ -214,11 +214,12 @@ class enrol_approval_plugin extends enrol_plugin {
             $timeend = 0;
         }
 
-        $this->enrol_user($instance, $USER->id, $instance->roleid, $timestart, $timeend);
+        $this->enrol_user($instance, $USER->id, $instance->roleid, $timestart, $timeend, ENROL_USER_SUSPENDED);
 
         // Send welcome message.
         if ($instance->customint4) {
-            $this->email_welcome_message($instance, $USER);
+            // TODO
+            //$this->email_welcome_message($instance, $USER);
         }
     }
 
@@ -272,6 +273,7 @@ class enrol_approval_plugin extends enrol_plugin {
             }
             // Check if user is already enroled.
             if ($DB->get_record('user_enrolments', array('userid' => $USER->id, 'enrolid' => $instance->id))) {
+                // TODO change message to "enrolment is already requested".
                 return get_string('canntenrol', 'enrol_approval');
             }
         }
@@ -573,15 +575,29 @@ class enrol_approval_plugin extends enrol_plugin {
         $instance = $ue->enrolmentinstance;
         $params = $manager->get_moodlepage()->url->params();
         $params['ue'] = $ue->id;
-        if ($this->allow_unenrol($instance) && has_capability("enrol/approval:unenrol", $context)) {
+        if ($ue->status == ENROL_USER_ACTIVE && $this->allow_unenrol($instance) && has_capability("enrol/approval:unenrol", $context)) {
             $url = new moodle_url('/enrol/unenroluser.php', $params);
             $actions[] = new user_enrolment_action(new pix_icon('t/delete', ''),
                     get_string('unenrol', 'enrol'), $url, array('class' => 'unenrollink', 'rel' => $ue->id));
         }
         if ($this->allow_manage($instance) && has_capability("enrol/approval:manage", $context)) {
-            $url = new moodle_url('/enrol/editenrolment.php', $params);
-            $actions[] = new user_enrolment_action(new pix_icon('t/edit', ''), get_string('edit'),
-                    $url, array('class' => 'editenrollink', 'rel' => $ue->id));
+            //$url = new moodle_url('/enrol/editenrolment.php', $params);
+            //$actions[] = new user_enrolment_action(new pix_icon('t/edit', ''), get_string('edit'),
+            //        $url, array('class' => 'editenrollink', 'rel' => $ue->id));
+            if ($ue->status == ENROL_USER_SUSPENDED) {
+                $url = new moodle_url('/enrol/approval/process.php',
+                        array('sesskey' => sesskey(),
+                            'ue' => $ue->id,
+                            'redirecturl' => $manager->get_moodlepage()->url));
+                $actions[] = new user_enrolment_action(new pix_icon('i/invalid', ''),
+                        get_string('decline', 'enrol_approval'),
+                        new moodle_url($url, array('action' => 'decline')),
+                        array('class' => 'unenrollink', 'rel' => $ue->id));
+                $actions[] = new user_enrolment_action(new pix_icon('i/valid', ''),
+                        get_string('approve', 'enrol_approval'),
+                        new moodle_url($url, array('action' => 'approve')),
+                        array('class' => 'editenrollink', 'rel' => $ue->id));
+            }
         }
         return $actions;
     }
