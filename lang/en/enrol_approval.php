@@ -38,13 +38,23 @@ $string['cohortonly_help'] = 'Self enrolment may be restricted to members of a s
 $string['confirmbulkapproveenrolment'] = 'Are you sure you want to approve these users enrolments?';
 $string['confirmbulkdeclineenrolment'] = 'Are you sure you want to decline these users enrolments?';
 $string['confirmbulkdeleteenrolment'] = 'Are you sure you want to delete these users enrolments?';
-$string['customwelcomemessage'] = 'Custom welcome message';
-$string['customwelcomemessage_help'] = 'A custom welcome message may be added as plain text or Moodle-auto format, including HTML tags and multi-lang tags.
-
-The following placeholders may be included in the message:
-
-* Course name {$a->coursename}
-* Link to user\'s profile page {$a->profileurl}';
+$string['customapplicationreceivedbody'] = 'Message body when application received';
+$string['customapplicationreceivedsubject'] = 'Message subject when application received';
+$string['customapplicationreceivedsubject_help'] = 'This message is sent to all users who have capability \'enrol/approval:notify\' in the course';
+$string['customapprovalbody'] = 'Message body on approval';
+$string['customapprovalsubject'] = 'Message subject on approval';
+$string['customdeclinebody'] = 'Message body on decline';
+$string['customdeclinesubject'] = 'Message subject on decline';
+$string['custommessageexplained'] = '<p>Messages may be added as plain text or Moodle-auto format, including HTML tags and multi-lang tags.</p>
+<p>The following placeholders may be included in the messages and subjects:</p>
+<ul>
+<li>Course name {$a->coursename}</li>
+<li>Link to user\'s profile page {$a->profileurl}</li>
+<li>User full name {$a->username}</li>
+<li>Link to manage enrollments page {$a->manageurl}</li>
+</ul>';
+$string['customyouhaveappliedbody'] = 'Message body on application';
+$string['customyouhaveappliedsubject'] = 'Message subject on application';
 $string['decline'] = 'Decline enrolment';
 $string['declineselectedusers'] = 'Decline selected users enrolments';
 $string['declineusers'] = 'Decline enrolments';
@@ -78,7 +88,8 @@ $string['longtimenosee_help'] = 'If users haven\'t accessed a course for a long 
 $string['maxenrolled'] = 'Max enrolled users';
 $string['maxenrolled_help'] = 'Specifies the maximum number of users that can self enrol. 0 means no limit.';
 $string['maxenrolledreached'] = 'This course is full.';
-$string['messageprovider:expiry_notification'] = 'Self enrolment expiry notifications';
+$string['messageprovider:expiry_notification'] = 'Self enrolment with approval expiry notifications';
+$string['messagestemplates'] = 'Messages templates';
 $string['newenrols'] = 'Allow new enrolment requests';
 $string['newenrols_help'] = 'This setting determines whether a user can enrol into this course.';
 $string['noapplicableusers'] = 'Neither of selected users has the status "{$a}" required for this action';
@@ -89,18 +100,30 @@ $string['pluginname'] = 'Self enrolment with approval';
 $string['pluginname_desc'] = 'The self enrolment by approval plugin allows users to choose which courses they want to participate in. Approval of teacher/manager is requried.';
 $string['requestenrolment'] = 'Request enrolment in this course.';
 $string['role'] = 'Default assigned role';
-$string['sendcoursewelcomemessage'] = 'Send course welcome message';
-$string['sendcoursewelcomemessage_help'] = 'If enabled, users receive a welcome message via email when they self-enrol in a course.';
+$string['sendmessageonapplication'] = 'Send message on application';
+$string['sendmessageonapplication_help'] = 'If enabled, users receive a message via email when they apply for enrolment in a course.';
 $string['status'] = 'Enable existing enrolments';
 $string['status_desc'] = 'Enable self enrolment by approval method in new courses.';
 $string['status_help'] = 'If disabled all existing enrolments under this method are suspended and new users can not enrol.';
-$string['unenrol'] = 'Unenrol user';
-$string['unenrolselfconfirm'] = 'Do you really want to unenrol yourself from course "{$a}"?';
-$string['unenroluser'] = 'Do you really want to unenrol "{$a->user}" from course "{$a->course}"?';
-$string['unenrolusers'] = 'Unenrol users';
-$string['welcometocourse'] = 'Welcome to {$a}';
-$string['welcometocoursetext'] = 'Welcome to {$a->coursename}!
+$string['templateapplicationreceivedbody'] = 'User {$a->username} has applied for enrollment in "{$a->coursename}"
+
+You can approve or decline enrollment applications at:
+{$a->manageurl}';
+$string['templateapplicationreceivedsubject'] = 'User {$a->username} applied to {$a->coursename}';
+$string['templateyouareapprovedbody'] = 'Congratulations, you are now enrolled in "{$a->coursename}"!
 
 If you have not done so already, you should edit your profile page so that we can learn more about you:
 
   {$a->profileurl}';
+$string['templateyouareapprovedsubject'] = 'Welcome to {$a->coursename}';
+$string['templateyouaredeclinedbody'] = 'We are sorry to inform you that your application to enrol in "{$a->coursename}" was declined.';
+$string['templateyouaredeclinedsubject'] = 'Your enrollment application was declined';
+$string['templateyouhaveappliedbody'] = 'Thank you for applying to "{$a->coursename}"!
+
+Your application will be considered and you will be notified about the enrollment shortly.';
+$string['templateyouhaveappliedsubject'] = 'You have applied to {$a->coursename}';
+$string['unenrol'] = 'Unenrol user';
+$string['unenrolselfconfirm'] = 'Do you really want to unenrol yourself from course "{$a}"?';
+$string['unenroluser'] = 'Do you really want to unenrol "{$a->user}" from course "{$a->course}"?';
+$string['unenrolusers'] = 'Unenrol users';
+$string['usedefault'] = 'Use default';

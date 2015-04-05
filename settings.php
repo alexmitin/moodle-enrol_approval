@@ -89,7 +89,7 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configtext('enrol_approval/maxenrolled',
         get_string('maxenrolled', 'enrol_approval'), get_string('maxenrolled_help', 'enrol_approval'), 0, PARAM_INT));
 
-    $settings->add(new admin_setting_configcheckbox('enrol_approval/sendcoursewelcomemessage',
-        get_string('sendcoursewelcomemessage', 'enrol_approval'),
-            get_string('sendcoursewelcomemessage_help', 'enrol_approval'), 1));
+    $settings->add(new admin_setting_configcheckbox('enrol_approval/sendmessageonapplication',
+        get_string('sendmessageonapplication', 'enrol_approval'),
+            get_string('sendmessageonapplication_help', 'enrol_approval'), 1));
 }

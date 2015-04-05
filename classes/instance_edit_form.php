@@ -36,6 +36,12 @@ require_once($CFG->dirroot.'/cohort/lib.php');
  */
 class enrol_approval_instance_edit_form extends moodleform {
 
+    /** @var array */
+    protected $templatekeys = array('templateyouhaveappliedbody', 'templateyouhaveappliedsubject',
+        'templateapplicationreceivedbody', 'templateapplicationreceivedsubject',
+        'templateyouareapprovedbody', 'templateyouareapprovedsubject',
+        'templateyouaredeclinedbody', 'templateyouaredeclinedsubject');
+
     /**
      * Form definition
      */
@@ -141,27 +147,85 @@ class enrol_approval_instance_edit_form extends moodleform {
             $mform->setConstant('customint5', 0);
         }
 
-        $mform->addElement('advcheckbox', 'customint4',
-                get_string('sendcoursewelcomemessage', 'enrol_approval'));
-        $mform->addHelpButton('customint4', 'sendcoursewelcomemessage', 'enrol_approval');
+        if (enrol_accessing_via_instance($instance)) {
+            $mform->addElement('static', 'selfwarn', get_string('instanceeditselfwarning', 'core_enrol'),
+                    get_string('instanceeditselfwarningtext', 'core_enrol'));
+        }
 
-        $mform->addElement('textarea', 'customtext1', get_string('customwelcomemessage', 'enrol_approval'),
-                array('cols' => '60', 'rows' => '8'));
-        $mform->addHelpButton('customtext1', 'customwelcomemessage', 'enrol_approval');
+        $mform->addElement('header', 'notifications_hdr', get_string('messagestemplates', 'enrol_approval'));
+        $mform->setExpanded('notifications_hdr', false);
+
+        $mform->addElement('advcheckbox', 'customint4',
+                get_string('sendmessageonapplication', 'enrol_approval'));
+        $mform->addHelpButton('customint4', 'sendmessageonapplication', 'enrol_approval');
+
+        $this->add_element_with_default('text', 'templateyouhaveappliedsubject', 'customyouhaveappliedsubject');
+        $this->add_element_with_default('textarea', 'templateyouhaveappliedbody', 'customyouhaveappliedbody');
+
+        $this->add_element_with_default('text', 'templateapplicationreceivedsubject',
+                'customapplicationreceivedsubject', 'customapplicationreceivedsubject');
+        $this->add_element_with_default('textarea', 'templateapplicationreceivedbody', 'customapplicationreceivedbody');
+
+        $this->add_element_with_default('text', 'templateyouareapprovedsubject', 'customapprovalsubject');
+        $this->add_element_with_default('textarea', 'templateyouareapprovedbody', 'customapprovalbody');
+
+        $this->add_element_with_default('text', 'templateyouaredeclinedsubject', 'customdeclinesubject');
+        $this->add_element_with_default('textarea', 'templateyouaredeclinedbody', 'customdeclinebody');
+
+        $mform->addElement('static', '', '', get_string('custommessageexplained', 'enrol_approval'));
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
         $mform->addElement('hidden', 'courseid');
         $mform->setType('courseid', PARAM_INT);
 
-        if (enrol_accessing_via_instance($instance)) {
-            $mform->addElement('static', 'selfwarn', get_string('instanceeditselfwarning', 'core_enrol'),
-                    get_string('instanceeditselfwarningtext', 'core_enrol'));
-        }
-
         $this->add_action_buttons(true, ($instance->id ? null : get_string('addinstance', 'enrol')));
 
         $this->set_data($instance);
+    }
+
+    /**
+     * Adds an element with "use default" checkbox
+     *
+     * @param string $eltype
+     * @param string $key
+     * @param string $titlestr
+     * @param string $helpstr
+     */
+    protected function add_element_with_default($eltype, $key, $titlestr, $helpstr = null) {
+        $mform = $this->_form;
+        $buttonarray = array();
+        $buttonarray[] = $mform->createElement('advcheckbox', $key . '_usedefault', '',
+                get_string('usedefault', 'enrol_approval'));
+        $buttonarray[] = $mform->createElement($eltype, $key, '',
+                ($eltype === 'textarea') ? array('cols' => '60', 'rows' => '8') : array('size' => 60));
+        $mform->setType($key, PARAM_RAW);
+        $mform->disabledIf($key, $key.'_usedefault', 'checked', 1);
+        $mform->addGroup($buttonarray, $key.'_grp', get_string($titlestr, 'enrol_approval'), array('<br/>'), false);
+        if ($helpstr) {
+            $mform->addHelpButton($key.'_grp', $helpstr, 'enrol_approval');
+        }
+    }
+
+    /**
+     * Set form data
+     *
+     * @param stdClass $data
+     */
+    public function set_data($data) {
+        $data = fullclone($data);
+        $templates = @json_decode($data->customtext1, true);
+        foreach ($this->templatekeys as $key) {
+            if (!empty($templates[$key])) {
+                $data->$key = $templates[$key];
+                $data->{$key.'_usedefault'} = 0;
+            } else {
+                $data->$key = get_string($key, 'enrol_approval');
+                $data->{$key.'_usedefault'} = 1;
+            }
+        }
+        unset($data->customtext1);
+        parent::set_data($data);
     }
 
     /**
@@ -207,5 +271,25 @@ class enrol_approval_instance_edit_form extends moodleform {
             }
         }
         return $roles;
+    }
+
+    /**
+     * Gets the form data
+     *
+     * @return stdClass|null
+     */
+    public function get_data() {
+        if (!$data = parent::get_data()) {
+            return $data;
+        }
+        $templates = array();
+        foreach ($this->templatekeys as $key) {
+            if (isset($data->$key) && empty($data->{$key.'_usedefault'})) {
+                $templates[$key] = $data->$key;
+                unset($data->$key);
+            }
+        }
+        $data->customtext1 = json_encode($templates);
+        return $data;
     }
 }

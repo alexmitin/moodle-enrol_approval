@@ -221,10 +221,7 @@ class enrol_approval_plugin extends enrol_plugin {
         $this->enrol_user($instance, $USER->id, $instance->roleid, $timestart, $timeend, ENROL_USER_SUSPENDED);
 
         // Send welcome message.
-        if ($instance->customint4) {
-            // TODO
-            //$this->email_welcome_message($instance, $USER);
-        }
+        $this->send_application_message($instance);
     }
 
     /**
@@ -380,7 +377,7 @@ class enrol_approval_plugin extends enrol_plugin {
         $fields['expirythreshold'] = $this->get_config('expirythreshold');
         $fields['customint2']      = $this->get_config('longtimenosee');
         $fields['customint3']      = $this->get_config('maxenrolled');
-        $fields['customint4']      = $this->get_config('sendcoursewelcomemessage');
+        $fields['customint4']      = $this->get_config('sendmessageonapplication');
         $fields['customint5']      = 0;
         $fields['customint6']      = 1;
 
@@ -388,26 +385,90 @@ class enrol_approval_plugin extends enrol_plugin {
     }
 
     /**
-     * Send welcome email to specified user.
+     * Send emails on application
      *
      * @param stdClass $instance
-     * @param stdClass $user user record
      * @return void
      */
-    protected function email_welcome_message($instance, $user) {
-        global $CFG, $DB;
+    protected function send_application_message($instance) {
+        global $USER;
 
-        $course = $DB->get_record('course', array('id' => $instance->courseid), '*', MUST_EXIST);
+        if ($instance->customint4) {
+            // Send message to user.
+            list($subject, $messagetext, $messagehtml) = $this->prepare_message($instance, $USER,
+                    'templateyouhaveappliedbody', 'templateyouhaveappliedsubject');
+
+            email_to_user($USER, core_user::get_support_user(), $subject, $messagetext, $messagehtml);
+        }
+
+        // Notify enrollers.
+        list($subject, $messagetext, $messagehtml) = $this->prepare_message($instance, $USER,
+                'templateapplicationreceivedbody', 'templateapplicationreceivedsubject');
+
+        $enrollers = get_users_by_capability(context_course::instance($instance->courseid),
+                'enrol/approval:notify');
+        foreach ($enrollers as $user) {
+            email_to_user($user, core_user::get_support_user(), $subject, $messagetext, $messagehtml);
+        }
+
+    }
+
+    /**
+     * Send message to user when his application was approved
+     *
+     * @param stdClass $instance
+     * @param int $userid
+     */
+    protected function send_approval_message(stdClass $instance, $userid) {
+        global $DB;
+        $user = $DB->get_record('user', array('id' => $userid));
+        list($subject, $messagetext, $messagehtml) = $this->prepare_message($instance, $user,
+                'templateyouareapprovedbody', 'templateyouareapprovedsubject');
+
+        email_to_user($user, core_user::get_support_user(), $subject, $messagetext, $messagehtml);
+    }
+
+    /**
+     * Send message to user when his application was declined
+     *
+     * @param stdClass $instance
+     * @param int $userid
+     */
+    protected function send_decline_message(stdClass $instance, $userid) {
+        global $DB;
+        $user = $DB->get_record('user', array('id' => $userid));
+        list($subject, $messagetext, $messagehtml) = $this->prepare_message($instance, $user,
+                'templateyouaredeclinedbody', 'templateyouaredeclinedsubject');
+
+        email_to_user($user, core_user::get_support_user(), $subject, $messagetext, $messagehtml);
+    }
+
+    /**
+     * Prepare the message for sending by processing templates
+     *
+     * @param stdClass $instance
+     * @param stdClass $user
+     * @param string $bodystring
+     * @param string $subjectstring
+     * @return array
+     */
+    protected function prepare_message($instance, $user, $bodystring, $subjectstring) {
+        global $CFG;
+        $course = get_course($instance->courseid);
         $context = context_course::instance($course->id);
+
+        $templates = @json_decode($instance->customtext1, true);
 
         $a = new stdClass();
         $a->coursename = format_string($course->fullname, true, array('context' => $context));
         $a->profileurl = "$CFG->wwwroot/user/view.php?id=$user->id&course=$course->id";
+        $a->manageurl = "$CFG->wwwroot/enrol/users.php?id={$course->id}&ifilter={$instance->id}&status=".ENROL_USER_SUSPENDED;
+        $a->username = fullname($user);
+        $keys = array('{$a->coursename}', '{$a->profileurl}', '{$a->manageurl}', '{$a->username}');
+        $values = array($a->coursename, $a->profileurl, $a->manageurl, $a->username);
 
-        if (trim($instance->customtext1) !== '') {
-            $message = $instance->customtext1;
-            $message = str_replace('{$a->coursename}', $a->coursename, $message);
-            $message = str_replace('{$a->profileurl}', $a->profileurl, $message);
+        if (!empty($templates[$bodystring])) {
+            $message = str_replace($keys, $values, $templates[$bodystring]);
             if (strpos($message, '<') === false) {
                 // Plain text only.
                 $messagetext = $message;
@@ -419,33 +480,59 @@ class enrol_approval_plugin extends enrol_plugin {
                 $messagetext = html_to_text($messagehtml);
             }
         } else {
-            $messagetext = get_string('welcometocoursetext', 'enrol_approval', $a);
+            $messagetext = get_string($bodystring, 'enrol_approval', $a);
             $messagehtml = text_to_html($messagetext, null, false, true);
         }
 
-        $subject = get_string('welcometocourse', 'enrol_approval',
-                format_string($course->fullname, true, array('context' => $context)));
-
-        $rusers = array();
-        if (!empty($CFG->coursecontact)) {
-            $croles = explode(',', $CFG->coursecontact);
-            list($sort, $sortparams) = users_order_by_sql('u');
-            // We only use the first user.
-            $i = 0;
-            do {
-                $rusers = get_role_users($croles[$i], $context, true, '',
-                    'r.sortorder ASC, ' . $sort, null, '', '', '', '', $sortparams);
-                $i++;
-            } while (empty($rusers) && !empty($croles[$i]));
-        }
-        if ($rusers) {
-            $contact = reset($rusers);
+        if (!empty($templates[$subjectstring])) {
+            $subject = str_replace($keys, $values, $templates[$subjectstring]);
         } else {
-            $contact = core_user::get_support_user();
+            $subject = get_string($subjectstring, 'enrol_approval', $a);
         }
 
-        // Directly emailing welcome message rather than using messaging.
-        email_to_user($user, $contact, $subject, $messagetext, $messagehtml);
+        return array($subject, $messagetext, $messagehtml);
+    }
+
+    /**
+     * Store user_enrolments changes and trigger event.
+     *
+     * @param stdClass $instance
+     * @param int $userid
+     * @param int $status
+     * @param int $timestart
+     * @param int $timeend
+     * @return void
+     */
+    public function update_user_enrol(stdClass $instance, $userid, $status = null, $timestart = null, $timeend = null) {
+        global $DB;
+        if (!$ue = $DB->get_record('user_enrolments',
+                array('enrolid' => $instance->id, 'userid' => $userid))) {
+            return;
+        }
+        parent::update_user_enrol($instance, $userid, $status, $timestart, $timeend);
+        if ($status == ENROL_USER_ACTIVE && $ue->status != ENROL_USER_ACTIVE) {
+            $this->send_approval_message($instance, $userid);
+        }
+    }
+
+    /**
+     * Unenrol user from course,
+     * the last unenrolment removes all remaining roles.
+     *
+     * @param stdClass $instance
+     * @param int $userid
+     * @return void
+     */
+    public function unenrol_user(stdClass $instance, $userid) {
+        global $DB;
+        if (!$ue = $DB->get_record('user_enrolments',
+                array('enrolid' => $instance->id, 'userid' => $userid))) {
+            return;
+        }
+        parent::unenrol_user($instance, $userid);
+        if ($ue->status == ENROL_USER_SUSPENDED) {
+            $this->send_decline_message($instance, $userid);
+        }
     }
 
     /**
@@ -617,16 +704,16 @@ class enrol_approval_plugin extends enrol_plugin {
         global $CFG;
         $context = $manager->get_context();
         $bulkoperations = array();
-        if (has_capability("enrol/approval:approve", $context)) {
+        if (has_capability('enrol/approval:approve', $context)) {
             $bulkoperations['approveselectedusers'] = new enrol_approval_approveselectedusers_operation($manager, $this);
         }
-        if (has_capability("enrol/approval:approve", $context)) {
+        if (has_capability('enrol/approval:approve', $context)) {
             $bulkoperations['declineselectedusers'] = new enrol_approval_declineselectedusers_operation($manager, $this);
         }
-        if (has_capability("enrol/approval:manage", $context)) {
+        if (has_capability('enrol/approval:manage', $context)) {
             $bulkoperations['editselectedusers'] = new enrol_approval_editselectedusers_operation($manager, $this);
         }
-        if (has_capability("enrol/approval:unenrol", $context)) {
+        if (has_capability('enrol/approval:unenrol', $context)) {
             $bulkoperations['deleteselectedusers'] = new enrol_approval_deleteselectedusers_operation($manager, $this);
         }
         return $bulkoperations;
