@@ -47,8 +47,7 @@ class enrol_approval_plugin extends enrol_plugin {
      * @return array of pix_icon
      */
     public function get_info_icons(array $instances) {
-        $key = false;
-        $nokey = false;
+        $canenrol = false;
         foreach ($instances as $instance) {
             if ($this->can_self_enrol($instance, false) !== true) {
                 // User can not enrol himself.
@@ -57,18 +56,11 @@ class enrol_approval_plugin extends enrol_plugin {
                 // would hide self-enrolment icons from guests.
                 continue;
             }
-            if ($instance->password or $instance->customint1) {
-                $key = true;
-            } else {
-                $nokey = true;
-            }
+            $canenrol = true;
         }
         $icons = array();
-        if ($nokey) {
-            $icons[] = new pix_icon('withoutkey', get_string('pluginname', 'enrol_approval'), 'enrol_approval');
-        }
-        if ($key) {
-            $icons[] = new pix_icon('withkey', get_string('pluginname', 'enrol_approval'), 'enrol_approval');
+        if ($canenrol) {
+            $icons[] = new pix_icon('approval', get_string('pluginname', 'enrol_approval'), 'enrol_approval');
         }
         return $icons;
     }
@@ -201,7 +193,7 @@ class enrol_approval_plugin extends enrol_plugin {
         if (!has_capability('moodle/course:enrolconfig', $context) or !has_capability('enrol/approval:config', $context)) {
             return null;
         }
-        // Multiple instances supported - different roles with different password.
+        // Multiple instances supported - different roles/cohorts.
         return new moodle_url('/enrol/approval/edit.php', array('courseid' => $courseid));
     }
 
@@ -215,11 +207,6 @@ class enrol_approval_plugin extends enrol_plugin {
     public function enrol_approval(stdClass $instance, $data = null) {
         global $DB, $USER, $CFG;
 
-        // Don't enrol user if password is not passed when required.
-        if ($instance->password && !isset($data->enrolpassword)) {
-            return;
-        }
-
         $timestart = time();
         if ($instance->enrolperiod) {
             $timeend = $timestart + $instance->enrolperiod;
@@ -229,21 +216,6 @@ class enrol_approval_plugin extends enrol_plugin {
 
         $this->enrol_user($instance, $USER->id, $instance->roleid, $timestart, $timeend);
 
-        if ($instance->password and $instance->customint1 and $data->enrolpassword !== $instance->password) {
-            // It must be a group enrolment, let's assign group too.
-            $groups = $DB->get_records('groups', array('courseid' => $instance->courseid), 'id', 'id, enrolmentkey');
-            foreach ($groups as $group) {
-                if (empty($group->enrolmentkey)) {
-                    continue;
-                }
-                if ($group->enrolmentkey === $data->enrolpassword) {
-                    // Add user to group.
-                    require_once($CFG->dirroot.'/group/lib.php');
-                    groups_add_member($group->id, $USER->id);
-                    break;
-                }
-            }
-        }
         // Send welcome message.
         if ($instance->customint4) {
             $this->email_welcome_message($instance, $USER);
@@ -364,16 +336,6 @@ class enrol_approval_plugin extends enrol_plugin {
         $instanceinfo->type = $this->get_name();
         $instanceinfo->name = $this->get_instance_name($instance);
         $instanceinfo->status = $this->can_self_enrol($instance);
-
-        if ($instance->password) {
-            $instanceinfo->requiredparam = new stdClass();
-            $instanceinfo->requiredparam->enrolpassword = get_string('password', 'enrol_approval');
-        }
-
-        // If enrolment is possible and password is required then return ws function name to get more information.
-        if ((true === $instanceinfo->status) && $instance->password) {
-            $instanceinfo->wsfunction = 'enrol_approval_get_instance_info';
-        }
         return $instanceinfo;
     }
 
@@ -385,10 +347,6 @@ class enrol_approval_plugin extends enrol_plugin {
      */
     public function add_default_instance($course) {
         $fields = $this->get_instance_defaults();
-
-        if ($this->get_config('requirepassword')) {
-            $fields['password'] = generate_password(20);
-        }
 
         return $this->add_instance($course, $fields);
     }
@@ -414,7 +372,6 @@ class enrol_approval_plugin extends enrol_plugin {
         $fields['expirynotify']    = $expirynotify;
         $fields['notifyall']       = $notifyall;
         $fields['expirythreshold'] = $this->get_config('expirythreshold');
-        $fields['customint1']      = $this->get_config('groupkey');
         $fields['customint2']      = $this->get_config('longtimenosee');
         $fields['customint3']      = $this->get_config('maxenrolled');
         $fields['customint4']      = $this->get_config('sendcoursewelcomemessage');

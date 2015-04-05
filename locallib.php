@@ -61,13 +61,8 @@ class enrol_approval_enrol_form extends moodleform {
         $heading = $plugin->get_instance_name($instance);
         $mform->addElement('header', 'selfheader', $heading);
 
-        if ($instance->password) {
-            // Change the id of self enrolment key input as there can be multiple self enrolment methods.
-            $mform->addElement('passwordunmask', 'enrolpassword', get_string('password', 'enrol_approval'),
-                    array('id' => 'enrolpassword_'.$instance->id));
-        } else {
-            $mform->addElement('static', 'nokey', '', get_string('nopassword', 'enrol_approval'));
-        }
+        // TODO display welcome message and text input.
+        $mform->addElement('static', 'nokey', '', get_string('requestenrolment', 'enrol_approval'));
 
         $this->add_action_buttons(false, get_string('enrolme', 'enrol_approval'));
 
@@ -96,37 +91,6 @@ class enrol_approval_enrol_form extends moodleform {
         if ($this->toomany) {
             $errors['notice'] = get_string('error');
             return $errors;
-        }
-
-        if ($instance->password) {
-            if ($data['enrolpassword'] !== $instance->password) {
-                if ($instance->customint1) {
-                    $groups = $DB->get_records('groups', array('courseid' => $instance->courseid), 'id ASC', 'id, enrolmentkey');
-                    $found = false;
-                    foreach ($groups as $group) {
-                        if (empty($group->enrolmentkey)) {
-                            continue;
-                        }
-                        if ($group->enrolmentkey === $data['enrolpassword']) {
-                            $found = true;
-                            break;
-                        }
-                    }
-                    if (!$found) {
-                        // We can not hint because there are probably multiple passwords.
-                        $errors['enrolpassword'] = get_string('passwordinvalid', 'enrol_approval');
-                    }
-
-                } else {
-                    $plugin = enrol_get_plugin('approval');
-                    if ($plugin->get_config('showhint')) {
-                        $hint = core_text::substr($instance->password, 0, 1);
-                        $errors['enrolpassword'] = get_string('passwordinvalidhint', 'enrol_approval', $hint);
-                    } else {
-                        $errors['enrolpassword'] = get_string('passwordinvalid', 'enrol_approval');
-                    }
-                }
-            }
         }
 
         return $errors;

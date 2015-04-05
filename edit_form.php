@@ -63,19 +63,6 @@ class enrol_approval_edit_form extends moodleform {
         $mform->addHelpButton('customint6', 'newenrols', 'enrol_approval');
         $mform->disabledIf('customint6', 'status', 'eq', ENROL_INSTANCE_DISABLED);
 
-        $passattribs = array('size' => '20', 'maxlength' => '50');
-        $mform->addElement('passwordunmask', 'password', get_string('password', 'enrol_approval'), $passattribs);
-        $mform->addHelpButton('password', 'password', 'enrol_approval');
-        if (empty($instance->id) and $plugin->get_config('requirepassword')) {
-            $mform->addRule('password', get_string('required'), 'required', null, 'client');
-        }
-        $mform->addRule('password', get_string('maximumchars', '', 50), 'maxlength', 50, 'server');
-
-        $options = array(1 => get_string('yes'),
-                         0 => get_string('no'));
-        $mform->addElement('select', 'customint1', get_string('groupkey', 'enrol_approval'), $options);
-        $mform->addHelpButton('customint1', 'groupkey', 'enrol_approval');
-
         $roles = $this->extend_assignable_roles($context, $instance->roleid);
         $mform->addElement('select', 'roleid', get_string('role', 'enrol_approval'), $roles);
 
@@ -189,32 +176,6 @@ class enrol_approval_edit_form extends moodleform {
         $errors = parent::validation($data, $files);
 
         list($instance, $plugin, $context) = $this->_customdata;
-        $checkpassword = false;
-
-        if ($instance->id) {
-            if ($data['status'] == ENROL_INSTANCE_ENABLED) {
-                if ($instance->password !== $data['password']) {
-                    $checkpassword = true;
-                }
-            }
-        } else {
-            if ($data['status'] == ENROL_INSTANCE_ENABLED) {
-                $checkpassword = true;
-            }
-        }
-
-        if ($checkpassword) {
-            $require = $plugin->get_config('requirepassword');
-            $policy  = $plugin->get_config('usepasswordpolicy');
-            if ($require and trim($data['password']) === '') {
-                $errors['password'] = get_string('required');
-            } else if ($policy) {
-                $errmsg = '';
-                if (!check_password_policy($data['password'], $errmsg)) {
-                    $errors['password'] = $errmsg;
-                }
-            }
-        }
 
         if ($data['status'] == ENROL_INSTANCE_ENABLED) {
             if (!empty($data['enrolenddate']) and $data['enrolenddate'] < $data['enrolstartdate']) {

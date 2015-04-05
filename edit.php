@@ -93,8 +93,6 @@ if ($mform->is_cancelled()) {
 
         $instance->status         = $data->status;
         $instance->name           = $data->name;
-        $instance->password       = $data->password;
-        $instance->customint1     = $data->customint1;
         $instance->customint2     = $data->customint2;
         $instance->customint3     = $data->customint3;
         $instance->customint4     = $data->customint4;
@@ -119,8 +117,6 @@ if ($mform->is_cancelled()) {
         $fields = array(
             'status'          => $data->status,
             'name'            => $data->name,
-            'password'        => $data->password,
-            'customint1'      => $data->customint1,
             'customint2'      => $data->customint2,
             'customint3'      => $data->customint3,
             'customint4'      => $data->customint4,

@@ -29,15 +29,6 @@ if ($ADMIN->fulltree) {
     // General settings.
     $settings->add(new admin_setting_heading('enrol_approval_settings', '', get_string('pluginname_desc', 'enrol_approval')));
 
-    $settings->add(new admin_setting_configcheckbox('enrol_approval/requirepassword',
-        get_string('requirepassword', 'enrol_approval'), get_string('requirepassword_desc', 'enrol_approval'), 0));
-
-    $settings->add(new admin_setting_configcheckbox('enrol_approval/usepasswordpolicy',
-        get_string('usepasswordpolicy', 'enrol_approval'), get_string('usepasswordpolicy_desc', 'enrol_approval'), 0));
-
-    $settings->add(new admin_setting_configcheckbox('enrol_approval/showhint',
-        get_string('showhint', 'enrol_approval'), get_string('showhint_desc', 'enrol_approval'), 0));
-
     // Note: let's reuse the ext sync constants and strings here, internally it is very similar,
     //       it describes what should happend when users are not supposed to be enerolled any more.
     $options = array(
@@ -71,11 +62,6 @@ if ($ADMIN->fulltree) {
     $options = array(1  => get_string('yes'), 0 => get_string('no'));
     $settings->add(new admin_setting_configselect('enrol_approval/newenrols',
         get_string('newenrols', 'enrol_approval'), get_string('newenrols_desc', 'enrol_approval'), 1, $options));
-
-    $options = array(1  => get_string('yes'),
-                     0 => get_string('no'));
-    $settings->add(new admin_setting_configselect('enrol_approval/groupkey',
-        get_string('groupkey', 'enrol_approval'), get_string('groupkey_desc', 'enrol_approval'), 0, $options));
 
     if (!during_initial_install()) {
         $options = get_default_enrol_roles(context_system::instance());
