@@ -104,7 +104,7 @@ class enrol_approval_plugin extends enrol_plugin {
      * @return bool
      */
     public function allow_unenrol(stdClass $instance) {
-        // Users with unenrol cap may unenrol other users manually manually.
+        // Users with unenrol cap may unenrol other users manually.
         return true;
     }
 
@@ -115,8 +115,8 @@ class enrol_approval_plugin extends enrol_plugin {
      * @return bool
      */
     public function allow_manage(stdClass $instance) {
-        // Users with manage cap may tweak period and status.
-        return true;
+        // Disable the default edit instance functionality.
+        return false;
     }
 
     /**
@@ -575,31 +575,57 @@ class enrol_approval_plugin extends enrol_plugin {
         $instance = $ue->enrolmentinstance;
         $params = $manager->get_moodlepage()->url->params();
         $params['ue'] = $ue->id;
-        if ($ue->status == ENROL_USER_ACTIVE && $this->allow_unenrol($instance) && has_capability("enrol/approval:unenrol", $context)) {
+        if ($ue->status == ENROL_USER_ACTIVE && $this->allow_unenrol($instance) &&
+                has_capability('enrol/approval:unenrol', $context)) {
             $url = new moodle_url('/enrol/unenroluser.php', $params);
             $actions[] = new user_enrolment_action(new pix_icon('t/delete', ''),
                     get_string('unenrol', 'enrol'), $url, array('class' => 'unenrollink', 'rel' => $ue->id));
         }
-        if ($this->allow_manage($instance) && has_capability("enrol/approval:manage", $context)) {
-            //$url = new moodle_url('/enrol/editenrolment.php', $params);
-            //$actions[] = new user_enrolment_action(new pix_icon('t/edit', ''), get_string('edit'),
-            //        $url, array('class' => 'editenrollink', 'rel' => $ue->id));
+        if (has_capability('enrol/approval:manage', $context)) {
+            $url = new moodle_url('/enrol/approval/process.php',
+                    array('ue' => $ue->id,
+                        'redirecturl' => $manager->get_moodlepage()->url));
+            $actions[] = new user_enrolment_action(new pix_icon('t/edit', ''), get_string('edit'),
+                    new moodle_url($url, array('action' => 'edit')),
+                    array('class' => 'editenrollink', 'rel' => $ue->id));
             if ($ue->status == ENROL_USER_SUSPENDED) {
-                $url = new moodle_url('/enrol/approval/process.php',
-                        array('sesskey' => sesskey(),
-                            'ue' => $ue->id,
-                            'redirecturl' => $manager->get_moodlepage()->url));
+                $url->param('sesskey', sesskey());
                 $actions[] = new user_enrolment_action(new pix_icon('i/invalid', ''),
                         get_string('decline', 'enrol_approval'),
                         new moodle_url($url, array('action' => 'decline')),
-                        array('class' => 'unenrollink', 'rel' => $ue->id));
+                        array('class' => 'declineenrollink', 'rel' => $ue->id));
                 $actions[] = new user_enrolment_action(new pix_icon('i/valid', ''),
                         get_string('approve', 'enrol_approval'),
                         new moodle_url($url, array('action' => 'approve')),
-                        array('class' => 'editenrollink', 'rel' => $ue->id));
+                        array('class' => 'approveenrollink', 'rel' => $ue->id));
             }
         }
         return $actions;
+    }
+
+    /**
+     * The enrol_approval plugin has several bulk operations that can be performed.
+     *
+     * @param course_enrolment_manager $manager
+     * @return array
+     */
+    public function get_bulk_operations(course_enrolment_manager $manager) {
+        global $CFG;
+        $context = $manager->get_context();
+        $bulkoperations = array();
+        if (has_capability("enrol/approval:manage", $context)) {
+            $bulkoperations['approveselectedusers'] = new enrol_approval_approveselectedusers_operation($manager, $this);
+        }
+        if (has_capability("enrol/approval:manage", $context)) {
+            $bulkoperations['declineselectedusers'] = new enrol_approval_declineselectedusers_operation($manager, $this);
+        }
+        if (has_capability("enrol/approval:manage", $context)) {
+            $bulkoperations['editselectedusers'] = new enrol_approval_editselectedusers_operation($manager, $this);
+        }
+        if (has_capability("enrol/approval:unenrol", $context)) {
+            $bulkoperations['deleteselectedusers'] = new enrol_approval_deleteselectedusers_operation($manager, $this);
+        }
+        return $bulkoperations;
     }
 
     /**

@@ -27,10 +27,15 @@ $string['approval:manage'] = 'Manage enrolled users';
 $string['approval:unenrol'] = 'Unenrol users from course';
 $string['approval:unenrolself'] = 'Unenrol self from the course';
 $string['approve'] = 'Approve enrolment';
+$string['approveusers'] = 'Approve enrolments';
+$string['approveselectedusers'] = 'Approve selected users enrolments';
 $string['canntenrol'] = 'Enrolment is disabled or inactive';
 $string['cohortnonmemberinfo'] = 'Only members of cohort \'{$a}\' can request enrolment.';
 $string['cohortonly'] = 'Only cohort members';
 $string['cohortonly_help'] = 'Self enrolment may be restricted to members of a specified cohort only. Note that changing this setting has no effect on existing enrolments.';
+$string['confirmbulkapproveenrolment'] = 'Are you sure you want to approve these users enrolments?';
+$string['confirmbulkdeclineenrolment'] = 'Are you sure you want to decline these users enrolments?';
+$string['confirmbulkdeleteenrolment'] = 'Are you sure you want to delete these users enrolments?';
 $string['customwelcomemessage'] = 'Custom welcome message';
 $string['customwelcomemessage_help'] = 'A custom welcome message may be added as plain text or Moodle-auto format, including HTML tags and multi-lang tags.
 
@@ -39,8 +44,12 @@ The following placeholders may be included in the message:
 * Course name {$a->coursename}
 * Link to user\'s profile page {$a->profileurl}';
 $string['decline'] = 'Decline enrolment';
+$string['declineselectedusers'] = 'Decline selected users enrolments';
+$string['declineusers'] = 'Decline enrolments';
 $string['defaultrole'] = 'Default role assignment';
 $string['defaultrole_desc'] = 'Select role which should be assigned to users during the enrolment';
+$string['deleteselectedusers'] = 'Delete selected user enrolments';
+$string['editselectedusers'] = 'Edit selected user enrolments';
 $string['enrolenddate'] = 'End date';
 $string['enrolenddate_help'] = 'If enabled, users can enrol themselves until this date only.';
 $string['enrolenddaterror'] = 'Enrolment end date cannot be earlier than start date';
@@ -73,6 +82,10 @@ $string['messageprovider:expiry_notification'] = 'Self enrolment expiry notifica
 $string['newenrols'] = 'Allow new enrolment requests';
 $string['newenrols_desc'] = 'Allow users to self enrol into new courses by default.';
 $string['newenrols_help'] = 'This setting determines whether a user can enrol into this course.';
+$string['noapplicableusers'] = 'Neither of selected users has the status "{$a}" required for this action';
+$string['partialapplicableusers'] = 'One or more of selected users do not have the status "{$a}" required for this action';
+$string['participationactive'] = 'Approved';
+$string['participationsuspended'] = 'Pending approval';
 $string['pluginname'] = 'Self enrolment with approval';
 $string['pluginname_desc'] = 'The self enrolment by approval plugin allows users to choose which courses they want to participate in. Approval of teacher/manager is requried.';
 $string['requestenrolment'] = 'Request enrolment in this course.';
@@ -85,6 +98,7 @@ $string['status_help'] = 'If disabled all existing enrolments under this method 
 $string['unenrol'] = 'Unenrol user';
 $string['unenrolselfconfirm'] = 'Do you really want to unenrol yourself from course "{$a}"?';
 $string['unenroluser'] = 'Do you really want to unenrol "{$a->user}" from course "{$a->course}"?';
+$string['unenrolusers'] = 'Unenrol users';
 $string['welcometocourse'] = 'Welcome to {$a}';
 $string['welcometocoursetext'] = 'Welcome to {$a->coursename}!
 

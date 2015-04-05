@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Process action on enrol_approval (approve, decline, etc.)
+ * Process action on enrol_approval (approve, decline, edit)
  *
  * @package    enrol_approval
  * @copyright  2015 Alex Mitin
@@ -40,23 +40,61 @@ $course = $DB->get_record('course', array('id' => $instance->courseid), '*', MUS
 $usersurl = new moodle_url('/enrol/users.php', array('id' => $course->id));
 
 if (($instance->enrol !== 'approval') ||
-        !($plugin = enrol_get_plugin($instance->enrol)) ||
-        !$plugin->allow_manage($instance)) {
-   redirect($usersurl);
+        !($plugin = enrol_get_plugin($instance->enrol))) {
+    redirect($usersurl);
 }
 
 require_login($course);
-require_sesskey();
 
 // The user must be able to manage enrolments within the course.
 require_capability('enrol/approval:manage', $PAGE->context);
 
-if ($action === 'approve' && $ue->status == ENROL_USER_SUSPENDED) {
-    $plugin->update_user_enrol($instance, $user->id, ENROL_USER_ACTIVE);
+$PAGE->set_url(new moodle_url('/enrol/approval/process.php',
+        array('ue' => $ueid, 'redirecturl' => $redirecturl, 'action' => $action)));
+
+if (!$redirecturl) {
+    $redirecturl = $usersurl;
 }
 
-if ($action === 'decline' && $ue->status == ENROL_USER_SUSPENDED) {
-    $plugin->unenrol_user($instance, $user->id);
+if ($action === 'approve') {
+    require_sesskey();
+    if ($ue->status == ENROL_USER_SUSPENDED) {
+        $plugin->update_user_enrol($instance, $user->id, ENROL_USER_ACTIVE);
+    }
+    redirect($redirecturl);
 }
 
-redirect($redirecturl ? $redirecturl : $usersurl, 'Redirecting', 10);
+if ($action === 'decline') {
+    require_sesskey();
+    if ($ue->status == ENROL_USER_SUSPENDED) {
+        $plugin->unenrol_user($instance, $user->id);
+    }
+    redirect($redirecturl);
+}
+
+if ($action === 'edit') {
+    $form = new enrol_approval_edit_enrolment_form($PAGE->url,
+            array('user' => $user, 'course' => $course, 'ue' => $ue));
+    if ($form->is_cancelled()) {
+        redirect($redirecturl);
+    } else if ($data = $form->get_data()) {
+        $plugin->update_user_enrol($instance, $user->id, $data->status, $data->timestart, $data->timeend);
+        redirect($redirecturl);
+    }
+
+    $fullname = fullname($user);
+    $title = get_string('editenrolment', 'core_enrol');
+
+    $PAGE->set_title($title);
+    $PAGE->set_heading($title);
+    $PAGE->navbar->add($title);
+    $PAGE->navbar->add($fullname);
+
+    echo $OUTPUT->header();
+    echo $OUTPUT->heading($fullname);
+    $form->display();
+    echo $OUTPUT->footer();
+    exit;
+}
+
+redirect($redirecturl);
