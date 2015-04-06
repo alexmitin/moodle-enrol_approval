@@ -157,6 +157,14 @@ class enrol_approval_plugin extends enrol_plugin {
             $instancesnode->add($this->get_instance_name($instance),
                     $managelink, navigation_node::TYPE_SETTING);
         }
+        if (!has_capability('moodle/course:enrolreview', $context) && has_capability('enrol/approval:approve', $context)) {
+            // Special link for users who have capability to approve enrolments
+            // but do not have capability to review all enrolments.
+            $approvelink = new moodle_url('/enrol/approval/workflow.php',
+                    array('enrolid' => $instance->id, 'action' => 'overview'));
+            $instancesnode->parent->add(get_string('approveusers', 'enrol_approval'),
+                    $approvelink, navigation_node::TYPE_SETTING);
+        }
     }
 
     /**
@@ -175,6 +183,11 @@ class enrol_approval_plugin extends enrol_plugin {
 
         $icons = array();
 
+        if (has_capability('enrol/approval:approve', $context)) {
+            $managelink = new moodle_url("/enrol/approval/workflow.php", array('enrolid' => $instance->id));
+            $icons[] = $OUTPUT->action_icon($managelink, new pix_icon('t/enrolusers',
+                    get_string('approveusers', 'enrol_approval'), 'core', array('class' => 'iconsmall')));
+        }
         if (has_capability('enrol/approval:config', $context)) {
             $editlink = new moodle_url("/enrol/approval/edit.php",
                     array('courseid' => $instance->courseid, 'id' => $instance->id));
@@ -462,10 +475,14 @@ class enrol_approval_plugin extends enrol_plugin {
         $a = new stdClass();
         $a->coursename = format_string($course->fullname, true, array('context' => $context));
         $a->profileurl = "$CFG->wwwroot/user/view.php?id=$user->id&course=$course->id";
-        $a->manageurl = "$CFG->wwwroot/enrol/users.php?id={$course->id}&ifilter={$instance->id}&status=".ENROL_USER_SUSPENDED;
+        $a->manageurl = "$CFG->wwwroot/enrol/approval/workflow.php?enrolid={$instance->id}";
+        $a->approveurl = "$CFG->wwwroot/enrol/approval/workflow.php?userid={$user->id}&enrolid={$instance->id}&action=approve";
+        $a->declineurl = "$CFG->wwwroot/enrol/approval/workflow.php?userid={$user->id}&enrolid={$instance->id}&action=decline";
         $a->username = fullname($user);
-        $keys = array('{$a->coursename}', '{$a->profileurl}', '{$a->manageurl}', '{$a->username}');
-        $values = array($a->coursename, $a->profileurl, $a->manageurl, $a->username);
+        $keys = array('{$a->coursename}', '{$a->profileurl}', '{$a->manageurl}',
+            '{$a->username}', '{$a->approveurl}', '{$a->declineurl}');
+        $values = array($a->coursename, $a->profileurl, $a->manageurl,
+            $a->username, $a->approveurl, $a->declineurl);
 
         if (!empty($templates[$bodystring])) {
             $message = str_replace($keys, $values, $templates[$bodystring]);
@@ -661,10 +678,23 @@ class enrol_approval_plugin extends enrol_plugin {
      * @return array An array of user_enrolment_actions
      */
     public function get_user_enrolment_actions(course_enrolment_manager $manager, $ue) {
-        $actions = array();
         $context = $manager->get_context();
+        $redirecturl = $manager->get_moodlepage()->url;
+        return $this->user_enrolment_actions($context, $redirecturl, $ue);
+    }
+
+    /**
+     * List of enrolment actions available to the current user
+     *
+     * @param context_course $context
+     * @param moodle_url $redirecturl
+     * @param stdClass $ue
+     * @return user_enrolment_action[]
+     */
+    protected function user_enrolment_actions($context, $redirecturl, $ue) {
+        $actions = array();
         $instance = $ue->enrolmentinstance;
-        $params = $manager->get_moodlepage()->url->params();
+        $params = $redirecturl->params();
         $params['ue'] = $ue->id;
         if ($ue->status == ENROL_USER_ACTIVE && $this->allow_unenrol($instance) &&
                 has_capability('enrol/approval:unenrol', $context)) {
@@ -672,9 +702,9 @@ class enrol_approval_plugin extends enrol_plugin {
             $actions[] = new user_enrolment_action(new pix_icon('t/delete', ''),
                     get_string('unenrol', 'enrol'), $url, array('class' => 'unenrollink', 'rel' => $ue->id));
         }
-        $url = new moodle_url('/enrol/approval/process.php',
+        $url = new moodle_url('/enrol/approval/workflow.php',
                 array('ue' => $ue->id,
-                    'redirecturl' => $manager->get_moodlepage()->url));
+                    'redirecturl' => $redirecturl));
         if (has_capability('enrol/approval:manage', $context)) {
             $actions[] = new user_enrolment_action(new pix_icon('t/edit', ''), get_string('edit'),
                     new moodle_url($url, array('action' => 'edit')),
@@ -692,6 +722,79 @@ class enrol_approval_plugin extends enrol_plugin {
                     array('class' => 'approveenrollink', 'rel' => $ue->id));
         }
         return $actions;
+    }
+
+    /**
+     * Counts the number of users with suspended status
+     *
+     * @param stdClass $instance
+     * @return int
+     */
+    public function count_inactive_users($instance) {
+        global $DB;
+        return $DB->count_records_sql('SELECT COUNT(u.id)
+                FROM {user} u, {user_enrolments} ue
+                WHERE u.id = ue.userid AND ue.enrolid = ? AND ue.status = ?',
+                array($instance->id, ENROL_USER_SUSPENDED));
+    }
+
+    /**
+     * Returns simple representation of the list of suspended users
+     *
+     * Is used in workflow.php for staff who is able to approve but not able
+     * to review enrolments
+     *
+     * @param stdClass $instance
+     * @param int|null $count
+     * @return string
+     */
+    public function overview_inactive_users($instance, $count = null) {
+        global $DB, $OUTPUT, $PAGE;
+
+        if ($count === 0) {
+            $users = array();
+        } else {
+            $namefields = get_all_user_name_fields(true, 'u');
+            $users = $DB->get_records_sql('select u.id, '.$namefields.',
+                    ue.timecreated AS applied, ue.id AS userenrolmentid
+                    FROM {user} u, {user_enrolments} ue
+                    WHERE u.id = ue.userid AND ue.enrolid = ? AND ue.status = ?
+                    ORDER BY ue.timecreated',
+                    array($instance->id, ENROL_USER_SUSPENDED));
+        }
+
+        if (!$users) {
+            return $OUTPUT->notification(get_string('nousers', 'enrol_approval')).
+                    (has_capability('moodle/course:enrolreview', $PAGE->context) ?
+                    html_writer::link(new moodle_url('/enrol/users.php',
+                            array('ifilter' => $instance->id, 'id' => $instance->courseid)),
+                            get_string('viewallenrolled', 'enrol_approval')) : '');
+        }
+
+        $renderer = $PAGE->get_renderer('core_enrol');
+        $table = new html_table();
+        $table->head = array(
+            get_string('name'),
+            get_string('actions'),
+        );
+        $table->data = array();
+        $userprofile = new moodle_url('/user/view.php', array('course' => $instance->courseid));
+        $context = context_course::instance($instance->courseid);
+        $redirecturl = new moodle_url('/enrol/approval/workflow.php', array('iid' => $instance->id));
+        $ue = (object)array('status' => ENROL_USER_SUSPENDED, 'enrolmentinstance' => $instance->id);
+        foreach ($users as $user) {
+            $ue->id = $user->userenrolmentid;
+            $actions = $this->user_enrolment_actions($context, $redirecturl, $ue);
+            $txt = '';
+            foreach (array_reverse($actions) as $action) {
+                $txt .= $renderer->render($action);
+            }
+            $table->data[] = array(
+                html_writer::link(new moodle_url($userprofile, array('id' => $user->id)), fullname($user)),
+                $txt
+            );
+        }
+        return html_writer::table($table);
     }
 
     /**
