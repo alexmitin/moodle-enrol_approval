@@ -40,9 +40,9 @@ class enrol_approval_editselectedusers_form extends enrol_approval_bulk_enrolmen
         $users = $this->_customdata['users'];
 
         $statusoptions = $this->get_status_options();
+        $form->addElement('html', $this->get_users_table($users, $statusoptions));
         // In this method the enrolment status can not be changed from "active" to "suspended".
         unset($statusoptions[ENROL_USER_SUSPENDED]);
-        $form->addElement('html', $this->get_users_table($users, $statusoptions));
         $form->addElement('select', 'status', get_string('alterstatus', 'enrol_manual'), $statusoptions, array('optional' => true));
         $form->addElement('date_time_selector', 'timestart', get_string('altertimestart', 'enrol_manual'),
                 array('optional' => true));
