@@ -17,6 +17,9 @@
 /**
  * Self enrolment with approval plugin.
  *
+ * This file is needed because otherwise the class enrol_approval_plugin would
+ * not be loaded. However the class itself is in autoloaded location.
+ *
  * @package    enrol_approval
  * @copyright  2015 Alex Mitin
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
